@@ -3,6 +3,13 @@ module.exports = function(grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
     concat: {
+      options: {
+        separator: ";"
+      },
+      dist: {
+        src: ['public/client/*.js', 'public/lib/*.js'],
+        dest: 'public/dist/production.js'
+      }
     },
 
     mochaTest: {
@@ -16,16 +23,27 @@ module.exports = function(grunt) {
 
     nodemon: {
       dev: {
-        script: 'server.js'
+        script: 'index.js'
       }
     },
 
     uglify: {
+      dist: {
+        src: ['public/dist/production.js'],
+        dest: 'public/dist/production.min.js'
+      }
     },
 
     jshint: {
       files: [
         // Add filespec list here
+        'app/**/*.js',
+        'lib/*.js',
+        'test/ServerSpec.js',
+        'public/client/*.js',
+        'Gruntfile.js',
+        'index.js',
+        'server.js'
       ],
       options: {
         force: 'true',
@@ -36,8 +54,19 @@ module.exports = function(grunt) {
         ]
       }
     },
-
+/*
+cssmin: {
+  minify: {
+    src: 'path-to/default.css',
+    dest: 'path-to/default.min.css'
+  }
+}
+*/
     cssmin: {
+      dist: {
+        src: ['public/style.css'],
+        dest: 'public/dist/style.min.css'
+      }
     },
 
     watch: {
@@ -59,6 +88,7 @@ module.exports = function(grunt) {
 
     shell: {
       prodServer: {
+        command: 'git push heroku master'
       }
     },
   });
@@ -88,25 +118,36 @@ module.exports = function(grunt) {
   ////////////////////////////////////////////////////
   // Main grunt tasks
   ////////////////////////////////////////////////////
+  grunt.registerTask('heroku:production', 'build');
 
   grunt.registerTask('test', [
     'mochaTest'
   ]);
 
   grunt.registerTask('build', [
+    'concat',
+    'uglify',
+    'jshint',
+    'cssmin',
+    'mochaTest:test'
   ]);
 
   grunt.registerTask('upload', function(n) {
     if(grunt.option('prod')) {
       // add your production server task here
+      grunt.task.run(['shell:prodServer'])
     } else {
       grunt.task.run([ 'server-dev' ]);
     }
   });
 
-  grunt.registerTask('deploy', [
-    // add your deploy tasks here
-  ]);
+  grunt.registerTask('deploy', function(n){
+    if(grunt.option('prod')) {
+      grunt.task.run(['build', 'shell:prodServer']);
+    } else {
+      grunt.task.run(['build', 'server-dev' ]);
+    }
+  });
 
 
 };
