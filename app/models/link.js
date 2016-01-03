@@ -1,4 +1,4 @@
-var crypto = require('crypto');
+[var crypto = require('crypto');
 var mongoose = require('mongoose');
 
 var linkSchema = mongoose.Schema({
@@ -9,7 +9,7 @@ var linkSchema = mongoose.Schema({
   visits: Number
 });
 
-linkSchema.methods.hash = function(model, attrs, options) {
+linkSchema.methods.hash = function() {
   var shasum = crypto.createHash('sha1');
   shasum.update(this.url);
   this.code = shasum.digest('hex').slice(0, 5);
